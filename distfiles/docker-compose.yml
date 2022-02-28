@@ -1,0 +1,18 @@
+version: "3"
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: ./proxy/Dockerfile
+    ports:
+      - 5487:8080
+  hello-from-the-world:
+    build:
+      context: .
+      dockerfile: ./hello-from-the-world/Dockerfile
+    network_mode: "service:proxy"
+  service-info:
+    build:
+      context: .
+      dockerfile: ./service-info/Dockerfile
+    network_mode: "service:proxy"

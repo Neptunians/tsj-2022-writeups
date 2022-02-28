@@ -1,0 +1,14 @@
+{
+  "name": "service-info",
+  "version": "1.0.0",
+  "description": "The package is for service-info from Nimja at Nantou",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "l3o",
+  "license": "ISC",
+  "dependencies": {
+    "systeminformation": "5.2.6"
+  }
+}
