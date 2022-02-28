@@ -3,12 +3,10 @@
 ![Banner](https://i.imgur.com/RO4lpJK.jpg)
 
 This was the first edition of TSJ CTF and it was great!
-There was a lot of hardcore Web Challenges, which 1 or 3 solves.
+There was a lot of hardcore Web Challenges, with 1 or 3 solves.
 I did some progress in other web challenges, but solved only Nimja. 
 
 Some hackers from our team broke 2 other pwns and we managed to get 22nd place among 82 teams, who made more than 110 points (Sanity + Questionnaire).
-
-## Nimja at Nantou
 
 ![Nimja](https://i.imgur.com/3N2CWme.png)
 
@@ -23,21 +21,21 @@ We also get a docker-compose file to easily start the challenge locally.
 
 ![docker-compose](https://i.imgur.com/Yed8D69.png)
 
-### Architecture
+## Architecture
 
 I think expanding the diagram will make it easier to understand the scenario.
 
 ![Expanded Diagram](https://i.imgur.com/zoPY8oa.png)
 
-#### Summary
+### Summary
 * Flag is in service-info (/flag file)
-* There is no request using the flag - it is not even referenced in the app.js file.
+* There is no request using the flag - it is not even referenced in the [app.js](https://github.com/Neptunians/tsj-2022-writeups/blob/main/distfiles/service-info/app.js) file.
 * keyfile is acessible inside hello-from-the-world (/key), but blocked by the proxy (route to /forbidden first)
 * /admin is the only useful option in service-info, but blocked by the proxy (route to /forbidden first)
 * We need to get the key from hello-from-the-world/key, to be able to call service-info/admin
 * We have to find a way to get the flag from service-info/admin
 
-### hello-from-the-world (nim language)
+## hello-from-the-world (nim language)
 
 First of all, we need to recover the key. Let's take a look at the source - [app.nim](https://github.com/Neptunians/tsj-2022-writeups/blob/main/distfiles/hello-from-the-world/app.nim).
 
@@ -105,7 +103,7 @@ when isMainModule:
   main()
 ```
 
-#### Weakness
+### Weakness
 
 When I first woke up, [Infektion](https://fireshellsecurity.team/infektion/) had already got the key, using the SSRF on /get_hello to bypass the proxy protection:
 
@@ -126,7 +124,7 @@ T$J_CTF_15_FUN_>_<_bY_Th3_wAy_IT_is_tHE_KEEEEEEEY_n0t_THE_flag
 
 Step one - done!
 
-### service-info (nodejs)
+## service-info (nodejs)
 
 Let's first lake a look at the code:
 
@@ -211,7 +209,7 @@ The only visible path here is to attack the [systeminformation](https://www.npmj
 
 But to get there, we have to call **/admin**.
 
-#### Getting into /admin
+### Getting into /admin
 
 To get into the next step, we must be able to send posts to /admin, which is also blocked by the proxy. 
 
@@ -239,7 +237,7 @@ Gotcha!!
 
 The admin page message means we successfully bypassed the Traffic Server remap configuration with this simple and lovely trick, also available for the POST request.
 
-#### Analyzing serviceinformation
+### Analyzing serviceinformation
 
 This was my first adventure on analyzing real-world source code for unknown vulnerabilities, and it was really fun!
 
@@ -290,7 +288,7 @@ function services(srv, callback) {
 
 Dead end?
 
-#### Hack the filter
+### Hack the filter
 
 That filtering leads us to the sanitization function, which is on a different file:
 
@@ -339,9 +337,10 @@ At first, I thought it was filtering only the first 2k chars and lost some time 
 
 ![Confused](https://i.imgur.com/Ah0DiAW.png)
 
-I couldn't find a bypass for any string, but after analyze the entire call sequence, I saw NO TYPE VALIDATION FOR STRING. So we can send an array!
+I couldn't find a bypass for any string, but after analyze the entire call sequence, I saw NO TYPE VALIDATION FOR STRING.
+So we can play with Type Confusion.
 
-In an array, it will test each element, assuming it is a char. If it is another array, the comparsion will fail. I also noticed that it just converts everything to string at the end.
+In an array, it will test each element, assuming it is a char. If the element is another array, the comparsion will fail and the char will not be filtered. I also noticed that it just converts everything to string at the end.
 
 I also changed the service function to generate debugging output (the print to console old way of our ancestors).
 
@@ -451,7 +450,7 @@ We proved the command injection on systeminformation 5.2.6.
 
 P.S.: The next version was already patched for this bug. The team perceived the vulnerability and solved it proactively. No specific  issue was registered.
 
-#### RCE for the Win
+### RCE for the Win
 
 Now we got all the pieces we need.
 Since I'm dumb (as already proved above), I translated the testcase to python:
@@ -519,7 +518,7 @@ $ echo ZmxhZ3tmYWtlfQo= | base64 -d
 flag{fake}
 ```
 
-And, in the actual event:
+And in the actual event:
 
 ```
 TSJ{HR5_1S_C001_XD_L3ts_gooooo}
@@ -529,12 +528,15 @@ TSJ{HR5_1S_C001_XD_L3ts_gooooo}
 * [CTF Time Event](https://ctftime.org/event/1547)
 * [TSJ CTF](https://chal.ctf.tsj.tw/)
 * [TSJ CTF Discord](https://discord.gg/u6taYEWGfr)
-* [Github with the artifacts discussed here](https://github.com/Neptunians/tsj-2022-writeups)
-* Team: [FireShell](https://fireshellsecurity.team/)
+* [Github repo with the artifacts discussed here](https://github.com/Neptunians/tsj-2022-writeups)
+* [Server-side request forgery (SSRF)](https://portswigger.net/web-security/ssrf)
+* [OS command injection](https://portswigger.net/web-security/os-command-injection)
+* [JavaScript type confusion](https://snyk.io/blog/remediate-javascript-type-confusion-bypassed-input-validation/)
+* [Cyber Apocalypse 2021 - Cessation](https://ctftime.org/writeup/27726)
 * [Apache Traffic Server](https://trafficserver.apache.org/)
 * [Nim Language](https://nim-lang.org/)
 * [systeminformation](https://www.npmjs.com/package/systeminformation)
-* [Server-side request forgery (SSRF)](https://portswigger.net/web-security/ssrf)
-
+* [ngrok](https://ngrok.com/)
+* Team: [FireShell](https://fireshellsecurity.team/)
 * Team Twitter: [@fireshellst](https://twitter.com/fireshellst)
 * Follow me too :) [@NeptunianHacks](https://twitter.com/NeptunianHacks) 
